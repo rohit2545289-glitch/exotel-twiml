@@ -1,6 +1,3 @@
-@echo off
-powershell -windowstyle hidden -command ""
-cd /d "%~dp0"
 
 python -c "
 import time
@@ -69,4 +66,3 @@ driver.quit()
 print('✅ Done!')
 "
 
-exit
