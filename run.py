@@ -16,10 +16,10 @@ options.add_argument("--disable-blink-features=AutomationControlled")
 options.add_experimental_option("excludeSwitches", ["enable-automation"])
 options.add_experimental_option("useAutomationExtension", False)
 
-# 🔥🔥🔥 HEADLESS MODE — CHROME BILKUL NAHI DIKHEGA! 🔥🔥🔥
-options.add_argument("--headless=new")
+# 🔥🔥🔥 CHROME SCREEN SE BAHAR CHHUP JAYEGA! 🔥🔥🔥
+options.add_argument("--window-position=-10000,-10000")
 
-print("📧 Opening Gmail (headless - completely hidden)...")
+print("📧 Opening Gmail (hidden off-screen)...")
 driver = webdriver.Chrome(
     service=Service(ChromeDriverManager().install()),
     options=options
