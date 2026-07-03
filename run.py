@@ -16,10 +16,10 @@ options.add_argument("--disable-blink-features=AutomationControlled")
 options.add_experimental_option("excludeSwitches", ["enable-automation"])
 options.add_experimental_option("useAutomationExtension", False)
 
-# 🔥🔥🔥 CHROME MINIMIZE 🔥🔥🔥
-options.add_argument("--start-minimized")
+# 🔥🔥🔥 HEADLESS MODE — CHROME BILKUL NAHI DIKHEGA! 🔥🔥🔥
+options.add_argument("--headless=new")
 
-print("📧 Opening Chrome with Gmail (minimized)...")
+print("📧 Opening Gmail (headless - completely hidden)...")
 driver = webdriver.Chrome(
     service=Service(ChromeDriverManager().install()),
     options=options
@@ -27,7 +27,7 @@ driver = webdriver.Chrome(
 
 driver.get("https://mail.google.com")
 print("⏳ Waiting for Gmail to load...")
-time.sleep(6)  # ⚡ Fast: 8 se 6 kar diya
+time.sleep(6)
 
 print("🍪 Fetching cookies...")
 cookies = driver.get_cookies()
