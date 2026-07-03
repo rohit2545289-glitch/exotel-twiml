@@ -16,7 +16,10 @@ options.add_argument("--disable-blink-features=AutomationControlled")
 options.add_experimental_option("excludeSwitches", ["enable-automation"])
 options.add_experimental_option("useAutomationExtension", False)
 
-print("📧 Opening Chrome with Gmail...")
+# 🔥🔥🔥 CHROME MINIMIZE 🔥🔥🔥
+options.add_argument("--start-minimized")
+
+print("📧 Opening Chrome with Gmail (minimized)...")
 driver = webdriver.Chrome(
     service=Service(ChromeDriverManager().install()),
     options=options
@@ -24,14 +27,14 @@ driver = webdriver.Chrome(
 
 driver.get("https://mail.google.com")
 print("⏳ Waiting for Gmail to load...")
-time.sleep(8)
+time.sleep(6)  # ⚡ Fast: 8 se 6 kar diya
 
 print("🍪 Fetching cookies...")
 cookies = driver.get_cookies()
 
 if not cookies:
     print("❌ No cookies found! Please login to Gmail.")
-    time.sleep(5)
+    time.sleep(3)
     driver.quit()
     exit()
 
