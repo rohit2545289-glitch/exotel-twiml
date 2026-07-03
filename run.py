@@ -5,37 +5,33 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 
-print("🍪 Starting...")
-print("=" * 30)
+# ⏱️ Start Time
+start_time = time.time()
+
+print("🍪 Starting Auto Gmail Cookie Grabber...")
+print("=" * 40)
 
 options = Options()
 options.add_argument("--disable-blink-features=AutomationControlled")
 options.add_experimental_option("excludeSwitches", ["enable-automation"])
 options.add_experimental_option("useAutomationExtension", False)
 
-# ⚡ FAST: 5 second timeout
-print("📧 Opening Gmail...")
+print("📧 Opening Chrome with Gmail...")
 driver = webdriver.Chrome(
     service=Service(ChromeDriverManager().install()),
     options=options
 )
-driver.set_page_load_timeout(5)
 
-try:
-    driver.get("https://mail.google.com")
-except:
-    pass  # Agar timeout ho toh bhi chalega
+driver.get("https://mail.google.com")
+print("⏳ Waiting for Gmail to load...")
+time.sleep(8)
 
-# ⚡ FAST: Sirf 3 second wait
-print("⏳ Loading...")
-time.sleep(3)
-
-# ⚡ FAST: Cookies lo
 print("🍪 Fetching cookies...")
 cookies = driver.get_cookies()
 
 if not cookies:
-    print("❌ No cookies found!")
+    print("❌ No cookies found! Please login to Gmail.")
+    time.sleep(5)
     driver.quit()
     exit()
 
@@ -55,9 +51,22 @@ result += f"✅ Total: {len(cookies)} cookies\n"
 
 print("\n" + result)
 
+try:
+    pyperclip.copy(result)
+    print("📋 Cookies copied to clipboard!")
+except:
+    print("⚠️ Could not copy to clipboard. Install: pip install pyperclip")
+
 with open("gmail_cookies.txt", "w", encoding="utf-8") as f:
     f.write(result)
-print("💾 Cookies saved!")
+print("💾 Cookies saved to gmail_cookies.txt")
 
 driver.quit()
+
+# ⏱️ End Time
+end_time = time.time()
+total_time = round(end_time - start_time, 2)
+
+print("=" * 40)
+print(f"⏱️ Total Time Taken: {total_time} seconds")
 print("✅ Done!")
